@@ -24,6 +24,10 @@ Using ONLY this information, produce:
 
 Return valid JSON.
 `;
+console.log(
+  "Company Data Sent to Gemini:",
+  JSON.stringify(companyData, null, 2)
+);
 
   const response = await generateStructuredResponse(
     prompt,

@@ -5,27 +5,30 @@ import { resolveCompanySymbol } from "./companyResolver.js";
 const BASE_URL = "https://www.alphavantage.co/query";
 
 export async function getCompanyOverview(companyName) {
-
   const company = await resolveCompanySymbol(companyName);
 
   console.log("Resolved Symbol:", company.symbol);
   console.log("API Key Exists:", !!env.ALPHA_VANTAGE_API_KEY);
 
-  const { data } = await axios.get(BASE_URL, {
-    params: {
-      function: "OVERVIEW",
-      symbol: company.symbol,
-      apikey: env.ALPHA_VANTAGE_API_KEY,
-    },
-  });
-  console.log("Alpha Vantage Response:", data);
+  try {
+    const { data } = await axios.get(BASE_URL, {
+      params: {
+        function: "OVERVIEW",
+        symbol: company.symbol,
+        apikey: env.ALPHA_VANTAGE_API_KEY,
+      },
+    });
 
-  return {
+    console.log("Alpha Response:", JSON.stringify(data, null, 2));
 
-    company,
+    return {
+      company,
+      overview: data,
+    };
+  } catch (err) {
+    console.error("Alpha Error:");
+    console.error(err.response?.data || err.message);
 
-    overview: data
-
-  };
-
+    throw err;
+  }
 }
