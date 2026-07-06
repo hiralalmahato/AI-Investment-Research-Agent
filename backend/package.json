@@ -1,0 +1,37 @@
+{
+  "name": "ai-investment-agent-backend",
+  "version": "1.0.0",
+  "description": "Backend for AI Investment Research Agent built with Node.js, Express, and LangGraph",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
+  },
+  "keywords": [
+    "ai",
+    "investment",
+    "nodejs",
+    "express",
+    "langchain",
+    "langgraph",
+    "llm"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@langchain/core": "^1.2.1",
+    "@langchain/google-genai": "^2.2.0",
+    "@langchain/langgraph": "^1.4.7",
+    "axios": "^1.11.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^5.1.0",
+    "pino": "^10.3.1",
+    "uuid": "^14.0.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
