@@ -8,6 +8,9 @@ export async function getCompanyOverview(companyName) {
 
   const company = await resolveCompanySymbol(companyName);
 
+  console.log("Resolved Symbol:", company.symbol);
+  console.log("API Key Exists:", !!env.ALPHA_VANTAGE_API_KEY);
+
   const { data } = await axios.get(BASE_URL, {
     params: {
       function: "OVERVIEW",
@@ -15,6 +18,7 @@ export async function getCompanyOverview(companyName) {
       apikey: env.ALPHA_VANTAGE_API_KEY,
     },
   });
+  console.log("Alpha Vantage Response:", data);
 
   return {
 
