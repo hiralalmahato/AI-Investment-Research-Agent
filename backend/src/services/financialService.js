@@ -2,33 +2,37 @@ import axios from "axios";
 import { env } from "../config/env.js";
 import { resolveCompanySymbol } from "./companyResolver.js";
 
-const BASE_URL = "https://www.alphavantage.co/query";
-
 export async function getCompanyOverview(companyName) {
   const company = await resolveCompanySymbol(companyName);
 
   console.log("Resolved Symbol:", company.symbol);
-  console.log("API Key Exists:", !!env.ALPHA_VANTAGE_API_KEY);
 
-  try {
-    const { data } = await axios.get(BASE_URL, {
+  const [profile, metrics] = await Promise.all([
+    axios.get("https://finnhub.io/api/v1/stock/profile2", {
       params: {
-        function: "OVERVIEW",
         symbol: company.symbol,
-        apikey: env.ALPHA_VANTAGE_API_KEY,
+        token: env.FINNHUB_API_KEY,
       },
-    });
+    }),
 
-    console.log("Alpha Response:", JSON.stringify(data, null, 2));
+    axios.get("https://finnhub.io/api/v1/stock/metric", {
+      params: {
+        symbol: company.symbol,
+        metric: "all",
+        token: env.FINNHUB_API_KEY,
+      },
+    }),
+  ]);
+  console.log("===== COMPANY DATA =====");
+console.log(JSON.stringify({
+  company,
+  overview: profile.data,
+  metrics: metrics.data,
+}, null, 2));
 
-    return {
-      company,
-      overview: data,
-    };
-  } catch (err) {
-    console.error("Alpha Error:");
-    console.error(err.response?.data || err.message);
-
-    throw err;
-  }
+  return {
+    company,
+    overview: profile.data,
+    metrics: metrics.data.metric,
+  };
 }
