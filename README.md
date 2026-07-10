@@ -1,14 +1,16 @@
 # 🚀 AI Investment Research Agent
 
-An AI-powered investment research platform built using **React, Node.js, LangGraph, Gemini AI, and Alpha Vantage API**.
+An AI-powered investment research platform built using **React.js, Node.js, Express.js, LangChain, LangGraph, Gemini AI, and Finnhub API**.
 
-The application uses a **Multi-Agent AI architecture** to analyze public companies and generate professional investment reports.
+The application implements a **Multi-Agent AI workflow** to automate equity research by collecting real-time financial data, analyzing company fundamentals, evaluating market sentiment, assessing investment risks, and generating structured investment recommendations through specialized AI agents.
 
 ---
 
 ## 📸 Project Preview
 
-(Add screenshots here after deployment)
+Live Demo: https://ai-investment-research-agent-livid.vercel.app/
+
+Backend API: https://ai-investment-research-agent-0jvi.onrender.com
 
 ---
 
@@ -50,7 +52,7 @@ The application uses a **Multi-Agent AI architecture** to analyze public compani
 - LangGraph
 - LangChain
 - Gemini AI
-- Alpha Vantage API
+- Finnhub API
 - Zod
 
 ---
@@ -80,8 +82,8 @@ LangGraph Workflow
        │
        ▼
 Gemini AI
-```
-
+       |
+Final InvestMent Report
 ---
 
 ## 📂 Folder Structure
@@ -137,11 +139,28 @@ Create a `.env` file in the backend directory.
 
 ```env
 GEMINI_API_KEY=your_key
-ALPHA_VANTAGE_API_KEY=your_key
-PORT=5000
+FINNHUB_API_KEY=your_key
+
 ```
 
 ---
+## Postman API Testing 
+API Endpoints
+
+Base URL
+https://your-render-link.onrender.com/api/v1
+
+
+Method: POST
+
+Headers
+Content-Type: application/json
+Body → Raw → JSON
+{
+  "company": "Tesla"
+}
+
+Click Send.
 
 ## 📄 Future Improvements
 
