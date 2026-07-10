@@ -202,7 +202,7 @@ AI-Investment-Research-Agent/
 ### Clone Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/AI-Investment-Research-Agent.git
+git clone https://github.com/hiralalmahato/AI-Investment-Research-Agent.git
 ```
 
 ### Backend
