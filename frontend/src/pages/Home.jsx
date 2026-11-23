@@ -1,249 +1,127 @@
-import { useState,useRef } from "react";
+import React, { useState, useRef } from "react";
 import toast from "react-hot-toast";
 import api from "../api/api";
-import Navbar from "../components/layout/Navbar";
-import Footer from "../components/layout/Footer";
-import CompanyOverview from "../components/CompanyOverview";
-import FinancialAnalysis from "../components/FinancialAnalysis";
-import NewsAnalysis from "../components/NewsAnalysis";
-import RiskAnalysis from "../components/RiskAnalysis";
-import Recommendation from "../components/Recommendation";
-import DashboardStats from "../components/DashboardStats";
-import { motion } from "framer-motion";
-import generatePDF from "../utils/generatePDF";
-import SearchBar from "../components/SearchBar";
-import Loader from "../components/ui/Loader";
-import SearchHistory from "../components/SearchHistory";
-import AIInsights from "../components/AIInsights";
+import { useTheme } from "../hooks/useTheme";
+import Header from "../components/Header";
+import Hero from "../components/Hero";
+import StepProgress from "../components/StepProgress";
+import ErrorAlert from "../components/ErrorAlert";
+import AnalysisView from "../components/AnalysisView";
+import Footer from "../components/Footer";
 
 export default function Home() {
+  const { theme, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [analysis, setAnalysis] = useState(null);
+  const [activeQuery, setActiveQuery] = useState("");
   const [history, setHistory] = useState(() => {
-  return JSON.parse(localStorage.getItem("history")) || [];
-});
+    try {
+      return JSON.parse(localStorage.getItem("history")) || [];
+    } catch {
+      return [];
+    }
+  });
 
-const reportRef = useRef(null);
+  const resultsRef = useRef(null);
 
-  const handleSearch = async (company) => {
+  const handleSearch = async (companyName) => {
+    const trimmed = (companyName || "").trim();
+    if (!trimmed) return;
+
     try {
       setLoading(true);
+      setError(null);
+      setActiveQuery(trimmed);
 
+      // EXACT SAME API CALL & PAYLOAD PRESERVED
       const response = await api.post("/analyze", {
-        company,
+        company: trimmed,
       });
 
-      
+      if (response?.data?.success && response?.data?.data) {
+        setAnalysis(response.data.data);
+        toast.success(`Dossier ready for ${trimmed.toUpperCase()}`);
 
-      setAnalysis(response.data.data);
-      toast.success("Investment report generated successfully!");
-      setTimeout(() => {
-  reportRef.current?.scrollIntoView({
-    behavior: "smooth",
-    block: "start",
-  });
-}, 300);
-      const updatedHistory = [
-  company,
-  ...history.filter(
-    (item) =>
-      item.toLowerCase() !== company.toLowerCase()
-  ),
-].slice(0, 5);
+        // Update history (same localStorage mechanism, max 5)
+        const updatedHistory = [
+          trimmed,
+          ...history.filter(
+            (item) =>
+              (typeof item === "string" ? item : item.name || "")
+                .toLowerCase() !== trimmed.toLowerCase()
+          ),
+        ].slice(0, 5);
 
-setHistory(updatedHistory);
+        setHistory(updatedHistory);
+        localStorage.setItem("history", JSON.stringify(updatedHistory));
 
-localStorage.setItem(
-  "history",
-  JSON.stringify(updatedHistory)
-);
-      console.log(response.data.data);
-      
-    } catch (error) {
-      toast.error(
-       error.response?.data?.message || "Something went wrong."
-      );
+        // Smooth scroll to results
+        setTimeout(() => {
+          resultsRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }, 150);
+      } else {
+        throw new Error(response?.data?.message || "Incomplete analysis returned.");
+      }
+    } catch (err) {
+      console.error("Analysis Request Error:", err);
+      const errMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to generate analysis. Please verify company ticker or name.";
+      setError(errMsg);
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
   };
-  console.log("Analysis State:", analysis);
 
   return (
-  <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white">
+    <div className="min-h-screen flex flex-col bg-bg text-text-main transition-colors duration-150">
+      {/* Clean, Professional Header (No portal clutter) */}
+      <Header theme={theme} onToggleTheme={toggleTheme} />
 
-    <Navbar />
+      {/* Main Workspace */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-6 sm:px-10 py-8 sm:py-14">
+        {/* Focused Hero Section */}
+        <Hero
+          onSearch={handleSearch}
+          loading={loading}
+          history={history}
+        />
 
-    <main className="max-w-7xl mx-auto px-6 py-20">
+        {/* Multi-Agent Execution Progress */}
+        {loading && (
+          <div className="pt-2">
+            <StepProgress company={activeQuery} />
+          </div>
+        )}
 
-      <motion.div
-  className="text-center mb-16"
-  initial={{ opacity: 0, y: -50 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{
-    duration: 0.8,
-    ease: "easeOut",
-  }}
->
+        {/* Error Alert with Retry */}
+        {!loading && error && (
+          <ErrorAlert
+            message={error}
+            onRetry={() => handleSearch(activeQuery)}
+          />
+        )}
 
-  <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-5 py-2 text-cyan-300 text-sm mb-8">
+        {/* Comprehensive Analysis Dossier */}
+        <div ref={resultsRef}>
+          {!loading && analysis && (
+            <AnalysisView
+              analysis={analysis}
+              onRerun={handleSearch}
+              isDark={theme === "dark"}
+            />
+          )}
+        </div>
+      </main>
 
-    🤖 AI Powered
-
-  </div>
-
-  <h1 className="text-6xl md:text-7xl font-black leading-tight bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 bg-clip-text text-transparent">
-
-    AI Investment
-    <br />
-    Research Agent
-
-  </h1>
-
-  <p className="mt-8 text-slate-300 text-xl max-w-3xl mx-auto leading-9">
-
-    Analyze any public company using a
-    <span className="text-cyan-400 font-semibold">
-      {" "}Multi-Agent AI Workflow{" "}
-    </span>
-
-    powered by
-    <span className="text-indigo-400 font-semibold">
-      {" "}LangGraph, Gemini AI, and Financial APIs.
-    </span>
-
-  </p>
-
-</motion.div>
-
-      <motion.div
-  initial={{ opacity: 0 }}
-  animate={{ opacity: 1 }}
-  transition={{
-    delay: 0.5,
-    duration: 0.7,
-  }}
->
-
-  <SearchBar
-    onSearch={handleSearch}
-    loading={loading}
-  />
-  <SearchHistory
-  history={history}
-  onSelect={handleSearch}
-/>
-
-</motion.div>
-
-      {loading && (
-        <Loader />
-      )}
-
-     {analysis && (
-  <motion.div
-   ref={reportRef}
-  className="mt-12"
-  initial={{ opacity: 0 }}
-  animate={{ opacity: 1 }}
-  transition={{
-    duration: 0.6,
-  }}
->
-     <DashboardStats analysis={analysis} />
-     <AIInsights analysis={analysis} />
-
-    
-      <motion.div
-  className="mb-10 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/10 p-8"
-  initial={{
-    opacity: 0,
-    scale: 0.9,
-  }}
-  animate={{
-    opacity: 1,
-    scale: 1,
-  }}
-  transition={{
-    delay: 0.3,
-    duration: 0.5,
-  }}
->
-
-  <div className="flex justify-between items-center">
-
-    <h2 className="text-4xl font-bold">
-        📊 Investment Analysis Report
-    </h2>
-
-    <button
-        onClick={() => generatePDF(analysis)}
-        className="
-            bg-cyan-500
-            hover:bg-cyan-600
-            px-5
-            py-3
-            rounded-xl
-            font-semibold
-            transition
-        "
-    >
-        Download PDF
-    </button>
-
-</div>
-
-  <p className="mt-2 text-slate-300">
-    Company :
-    <span className="font-semibold text-cyan-400">
-      {" "}{analysis.company}
-    </span>
-  </p>
-
-  <p className="text-slate-400 mt-1">
-    Generated by AI Multi-Agent Workflow
-  </p>
-
-  <p className="text-slate-500 text-sm mt-3">
-    {new Date().toLocaleString()}
-  </p>
-
-</motion.div>
-<div className="grid gap-8 grid-cols-1 xl:grid-cols-2">
-
-      <CompanyOverview
-        research={analysis.research}
-      />
-
-      <FinancialAnalysis
-        financial={analysis.financial}
-      />
-
-      <NewsAnalysis
-        news={analysis.news}
-      />
-
-      <RiskAnalysis
-        risk={analysis.risk}
-      />
-
+      {/* Minimalist Professional Footer */}
+      <Footer />
     </div>
-
-    <div className="mt-6">
-
-      <Recommendation
-        recommendation={analysis.recommendation}
-      />
-
-    </div>
-
-  </motion.div>
-)}
-
-    </main>
-
-    <Footer />
-
-  </div>
-);
+  );
 }

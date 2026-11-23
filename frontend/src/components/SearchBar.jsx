@@ -1,84 +1,73 @@
-import { useState } from "react";
-import { Search, Sparkles } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Search, ArrowRight, Loader2 } from "lucide-react";
 
-export default function SearchBar({ onSearch, loading }) {
-  const [company, setCompany] = useState("");
+export default function SearchBar({ onSearch, loading, initialValue = "" }) {
+  const [query, setQuery] = useState(initialValue);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    setQuery(initialValue);
+  }, [initialValue]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "/" && document.activeElement !== inputRef.current) {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    if (!company.trim()) return;
-
-    onSearch(company);
+    const trimmed = query.trim();
+    if (!trimmed || loading) return;
+    onSearch(trimmed);
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-4xl mx-auto"
-    >
-      <div className="relative">
-
-        <Search
-          className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"
-          size={22}
-        />
+    <form onSubmit={handleSubmit} className="w-full">
+      <div className="relative flex items-center w-full h-14 bg-surface rounded-lg border border-border focus-within:border-primary transition-all duration-150 overflow-hidden">
+        <div className="pl-5 pr-3 text-text-muted shrink-0 flex items-center">
+          <Search size={20} strokeWidth={1.75} />
+        </div>
 
         <input
+          ref={inputRef}
           type="text"
-          placeholder="Search Apple, Microsoft, Nvidia, Tesla..."
-          value={company}
-          onChange={(e) => setCompany(e.target.value)}
-          className="
-            w-full
-            rounded-2xl
-            bg-white/10
-            backdrop-blur-xl
-            border
-            border-white/20
-            text-white
-            placeholder:text-slate-400
-            pl-14
-            pr-44
-            py-5
-            text-lg
-            outline-none
-            focus:ring-2
-            focus:ring-cyan-500
-            transition
-          "
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search by company name or ticker symbol (e.g. Apple, TSLA, NVDA)..."
+          disabled={loading}
+          aria-label="Search company name or ticker"
+          className="w-full h-full bg-transparent text-text-main text-sm sm:text-base placeholder:text-text-muted/70 focus:outline-none px-2"
         />
 
+        {/* Keyboard shortcut hint */}
+        <div className="hidden sm:flex items-center mr-3 px-2 py-1 rounded border border-border bg-bg text-text-muted text-xs font-mono select-none">
+          /
+        </div>
+
+        {/* Analyze Action Button */}
         <button
-          disabled={loading}
-          className="
-            absolute
-            right-2
-            top-2
-            bottom-2
-            px-8
-            rounded-xl
-            bg-gradient-to-r
-            from-cyan-500
-            to-blue-600
-            hover:from-cyan-400
-            hover:to-blue-500
-            font-semibold
-            flex
-            items-center
-            gap-2
-            disabled:opacity-60
-            transition-all
-            duration-300
-            hover:scale-105
-            shadow-lg
-        "
+          type="submit"
+          disabled={loading || !query.trim()}
+          className="h-full px-7 bg-primary text-white font-semibold text-sm hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 flex items-center gap-2 shrink-0 cursor-pointer"
         >
-          <Sparkles size={18} />
-
-          {loading ? "Analyzing..." : "Analyze"}
+          {loading ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              <span>Analyzing...</span>
+            </>
+          ) : (
+            <>
+              <span>Analyze</span>
+              <ArrowRight size={15} />
+            </>
+          )}
         </button>
-
       </div>
     </form>
   );
